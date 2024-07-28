@@ -1,9 +1,9 @@
-def vowel(v):
+def vowel(v):    #checking for vowel 
     vowels='aeiouAEIOU'
     if v in vowels:
         return True
     return False
-def count(string):
+def count(string):    #counting number of vowels in the string
     vowel_count,consonant_count =0,0
     for i in string:
         if ('a'<=i<='z') or ('A'<=i<='Z'):
