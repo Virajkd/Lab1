@@ -1,0 +1,39 @@
+import pandas as pd
+import numpy as np     
+file_path="C:/Users/year3/Desktop/Lab Session Data.xlsx"  #use of forward slashes
+df = pd.read_excel(file_path, sheet_name='Purchase data') 
+#print(df.head)
+all_sheets = pd.read_excel(file_path, sheet_name=None)
+#print(all_sheets.keys())
+
+a=['Candies(#)','Mangoes(Kg)','Milk Packets(#)']
+A= pd.read_excel(file_path, usecols=a)
+c=['Payment(Rs)']
+C=pd.read_excel(file_path,usecols=c)
+
+matA, matC= A.to_numpy(), C.to_numpy()                 #converting dataframe to a numpy arrau
+rankA=np.linalg.matrix_rank(matA) 
+rankC=np.linalg.matrix_rank(matC)
+  #linalg.matrix_rank
+
+
+'''for i in range(2):
+    x=A
+    print("Dimensionality:",x.shape[1],"x",x.shape[0])   # 1= number of columns
+    print("Number of Vectors:",x.shape[0])   # 0= number of rows
+    x=C'''
+print("A")
+print("Dimensionality:",A.shape[1],"x",A.shape[0])
+print("Number of Vectors:",A.shape[0])
+print("Rank:",rankA)
+print("C")
+print("Dimensionality:",C.shape[1],"x",C.shape[0])
+print("Number of Vectors:",C.shape[0])
+print("Rank:",rankC)
+
+A_pinv= np.linalg.pinv(A)
+X=A_pinv @ C
+print(X)
+
+df['Class']=df['Payment(Rs)'].apply(lambda x:'RICH' if x>200 else 'POOR')
+print(df.head)
