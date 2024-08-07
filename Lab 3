@@ -1,0 +1,39 @@
+import pandas as pd
+import numpy as np
+file_path='/content/totalmerged.xlsx'
+df=pd.read_excel(file_path)
+print(df.head)
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.feature_extraction.text import TfidfVectorizer
+import transformers
+from transformers import TFBertModel, BertTokenizer, AutoTokenizer, TFAutoModel
+
+
+"""
+encoder=OneHotEncoder(sparse=False)
+encoded_data=encoder.fit_transform(df[['Correct_Code']])
+encoded_df=pd.DataFrame(encoded_data, columns=encoder.get_feature_names_out(['Correct_Code']))
+final_df=pd.concat([df,encoded_df], axis=1)
+print(final_df)
+"""
+'''
+tfidf_vectorizer=TfidfVectorizer()
+X_tfidf=tfidf_vectorizer.fit_transform(df[['Correct_Code']])
+tfidf_array= X_tfidf.toarray()
+feature_names_tfidf = tfidf_vectorizer.get_feature_names_out()
+
+print(f'Feature Names: {feature_names_tfidf}')
+print(f' TF-IDF array:\n {tfidf_array}')
+'''
+# Load the codeBert tokenizer and model
+tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base")
+codeBERT_model  = TFAutoModel.from_pretrained("microsoft/codebert-base")
+Q=df["Question"]
+Q_vectors = []
+for text in Q:
+    inputs = tokenizer.encode_plus(text, add_special_tokens=True, return_tensors='tf', max_length=512, truncation=True)
+    input_ids = inputs['input_ids']
+    attention_mask = inputs['attention_mask']
+    output = codeBERT_model(input_ids, attention_mask=attention_mask)[0][:, 0, :]
+    Q_vectors.append(output.numpy())
+np.mean(Q_vectors)
