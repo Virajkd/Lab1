@@ -1,39 +1,157 @@
 import pandas as pd
 import numpy as np
-file_path='/content/totalmerged.xlsx'
-df=pd.read_excel(file_path)
+import matplotlib.pyplot as plt  #plotting
+import seaborn as sns    #statistical data visualization
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import f1_score
+
+file_path='/content/VSP - Java.xlsx'
+df=pd.read_excel(file_path) #df- data frame, reading the excel file
 print(df.head)
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.feature_extraction.text import TfidfVectorizer
-import transformers
-from transformers import TFBertModel, BertTokenizer, AutoTokenizer, TFAutoModel
+
+#Q1
+def mean (name):   # mean using numpy
+  c_mean=np.mean(name,axis=0)
+  return c_mean
+
+def variance(name):
+  c_var=np.var(name,axis=0)
+  return c_var
+
+def std_dev(name):   #standard deviation using numpy
+  c_array=name.values
+  c_std_dev=np.std(c_array,axis=0)
+  return c_std_dev
+
+def distance_centroid(c1,c2):    #Euclidean distance between mean of class c1 and c2
+  return np.linalg.norm(c1-c2)
+
+c2=df['Final_Marks']
+cl_1,cl_2=[1,2,3,4,5],[6,7,8,9,10]
+cl_1=df[df['Final_Marks']<=5]['Final_Marks']
+cl_2=df[df['Final_Marks']>5]['Final_Marks']
+print(cl_1)
+print(cl_2)
+cl_1_mean=mean(cl_1)
+cl_2_mean=mean(cl_2)
+cl_1_std_dev=std_dev(cl_1)
+cl_2_std_dev=std_dev(cl_2)
+print('Mean of class 1:',cl_1_mean,'\nMean of class 2:',cl_2_mean)
+print('Standard Deviation of class 1:', cl_1_std_dev,'\nStandard Deviation of class 2:',cl_2_std_dev)
+print('Distance between class 1 and class 2:',distance_centroid(cl_1_mean,cl_2_mean))
 
 
-"""
-encoder=OneHotEncoder(sparse=False)
-encoded_data=encoder.fit_transform(df[['Correct_Code']])
-encoded_df=pd.DataFrame(encoded_data, columns=encoder.get_feature_names_out(['Correct_Code']))
-final_df=pd.concat([df,encoded_df], axis=1)
-print(final_df)
-"""
-'''
-tfidf_vectorizer=TfidfVectorizer()
-X_tfidf=tfidf_vectorizer.fit_transform(df[['Correct_Code']])
-tfidf_array= X_tfidf.toarray()
-feature_names_tfidf = tfidf_vectorizer.get_feature_names_out()
+#Q2
+def feature_hist (c2):
+  hist,bin_edge=np.histogram(c2,bins=2)
+  plt.hist(c2,bins=2,edgecolor='black')
+  plt.xlabel('Final Marks')
+  plt.ylabel('Frequency')
+  plt.title('Histogram of Final Marks')
+  plt.show()
 
-print(f'Feature Names: {feature_names_tfidf}')
-print(f' TF-IDF array:\n {tfidf_array}')
-'''
-# Load the codeBert tokenizer and model
-tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base")
-codeBERT_model  = TFAutoModel.from_pretrained("microsoft/codebert-base")
-Q=df["Question"]
-Q_vectors = []
-for text in Q:
-    inputs = tokenizer.encode_plus(text, add_special_tokens=True, return_tensors='tf', max_length=512, truncation=True)
-    input_ids = inputs['input_ids']
-    attention_mask = inputs['attention_mask']
-    output = codeBERT_model(input_ids, attention_mask=attention_mask)[0][:, 0, :]
-    Q_vectors.append(output.numpy())
-np.mean(Q_vectors)
+c3=df["Final_Marks"]
+feature_hist(c3)
+mean_c3=mean(c3)
+print("Mean:", mean_c3)
+variance_c3=variance(c3)
+print("Variance:",variance_c3)
+std_dev_c3= std_dev(c3)
+print("Standard Deviation:",std_dev_c3)
+
+#Q3
+def minkwoski_distance(c1,c2):
+  a=[]
+  for i in range(1,11):
+    a.append(np.power(np.sum(np.abs(c2-c1)**i),1/i))
+  return a
+def graph_mink_dis(a):
+  index=range(len(a))
+  plt.plot(index,a,marker='o',linestyle='-',color='b',label='Distance')
+  plt.title('Minkowski Distance')
+  plt.xlabel('Index')
+  plt.ylabel('distance')
+  plt.grid(True)
+  plt.legend()
+  plt.show()
+c1=df["Comprehensible_code_with_syntax_errors"].values
+c2=df["Comprehensible_code_with_logical_errors"].values
+print("Minkwoski distaces: ",minkwoski_distance(c1,c2))
+graph_mink_dis(minkwoski_distance(c1,c2))
+
+#Q4
+X=df.head(150)[['Header_and_Main_declaration','Incomprehensible_Code','Comprehensible_code_with_logical_errors','Comprehensible_code_with_syntax_errors','Correct_Code_and_Output']].values
+y=np.where(df.head(150)['Final_Marks']<=5,0,1)
+X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.3)
+print("X_train:\n", X_train,"X_test:\n", X_test,"y_train:\n", y_train,"y_test:\n", y_test)
+
+#Q5
+neigh = KNeighborsClassifier(n_neighbors=3)
+neigh.fit(X_train, y_train)
+y_pred = neigh.predict(X_test)
+print("Predicted:",y_pred)
+print("Actual:",y_test)
+
+#Q6
+neigh.score(X_test, y_test)
+
+#Q7
+neigh.predict(X_test)
+
+#Q8
+def compare_kval(X_train, y_train):
+  val=[]
+  r=range(1,12)
+  for i in range  (1,12):
+    neigh=KNeighborsClassifier(n_neighbors=i)
+    neigh.fit(X_train,y_train)
+    y_pred_train=neigh.predict(X_train)
+    y_pred_test=neigh.predict(X_test)
+    accuracy=accuracy_score(y_test,y_pred)
+    val.append(accuracy)
+    print("Accuracy k=",i,":",accuracy)
+  plt.plot(r,val,marker='o')
+  plt.xlabel('k')
+  plt.ylabel('Accuracy')
+  plt.title('Accuracy of KNN for different k values')
+  plt.grid(True)
+  plt.show()
+  for k in range(1,12):
+    print("Accuracy is (at",k,"):",val)
+val=compare_kval(X_train,y_train)
+
+#Q9
+cm=confusion_matrix(y_test,y_pred)
+print("Confusion Matrix:\n",cm)
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False,
+            xticklabels=['Class 0', 'Class 1'], yticklabels=['Class 0', 'Class 1'])
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix')
+plt.show()
+
+precision_test = precision_score(y_test, y_pred)
+print("Precision for testing data:", precision_test)
+
+recall_test = recall_score(y_test, y_pred)
+print("Recall:", recall_test)
+
+F1score_test=f1_score(y_test, y_pred)
+print("F1 Score:", F1score_test)
+
+
+train_accuracy = accuracy_score(y_train, neigh.predict(X_train))
+test_accuracy = accuracy_score(y_test, neigh.predict(X_test))
+
+if train_accuracy > test_accuracy and train_accuracy - test_accuracy > 0.1:
+    print("The model is overfitting.")
+elif train_accuracy < 0.7 and test_accuracy < 0.7:
+    print("The model is underfitting.")
+else:
+    print("The model has a regular fit.")
