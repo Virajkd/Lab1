@@ -11,7 +11,7 @@ A= pd.read_excel(file_path, usecols=a)
 c=['Payment(Rs)']
 C=pd.read_excel(file_path,usecols=c)
 
-matA, matC= A.to_numpy(), C.to_numpy()                 #converting dataframe to a numpy arrau
+matA, matC= A.to_numpy(), C.to_numpy()                 #converting dataframe to a numpy array
 rankA=np.linalg.matrix_rank(matA) 
 rankC=np.linalg.matrix_rank(matC)
   #linalg.matrix_rank
