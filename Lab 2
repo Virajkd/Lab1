@@ -1,39 +1,56 @@
 import pandas as pd
 import numpy as np     
-file_path="C:/Users/year3/Desktop/Lab Session Data.xlsx"  #use of forward slashes
+
+# Define the path to the Excel file (use forward slashes to avoid issues on Windows)
+file_path = "C:/Users/year3/Desktop/Lab Session Data.xlsx"
+
+# Read specific sheet 'Purchase data' from the Excel file
 df = pd.read_excel(file_path, sheet_name='Purchase data') 
-#print(df.head)
+
+# Read all sheets from the Excel file into a dictionary
 all_sheets = pd.read_excel(file_path, sheet_name=None)
-#print(all_sheets.keys())
+#print(all_sheets.keys())  # You can print the sheet names to see available data
 
-a=['Candies(#)','Mangoes(Kg)','Milk Packets(#)']
-A= pd.read_excel(file_path, usecols=a)
-c=['Payment(Rs)']
-C=pd.read_excel(file_path,usecols=c)
+# Columns to be selected from the sheet for matrix A
+a = ['Candies(#)', 'Mangoes(Kg)', 'Milk Packets(#)']
 
-matA, matC= A.to_numpy(), C.to_numpy()                 #converting dataframe to a numpy array
-rankA=np.linalg.matrix_rank(matA) 
-rankC=np.linalg.matrix_rank(matC)
-  #linalg.matrix_rank
+# Read specific columns for matrix A
+A = pd.read_excel(file_path, usecols=a)
 
+# Column to be selected for matrix C
+c = ['Payment(Rs)']
 
-'''for i in range(2):
-    x=A
-    print("Dimensionality:",x.shape[1],"x",x.shape[0])   # 1= number of columns
-    print("Number of Vectors:",x.shape[0])   # 0= number of rows
-    x=C'''
+# Read specific columns for matrix C
+C = pd.read_excel(file_path, usecols=c)
+
+# Convert dataframes A and C to numpy arrays for matrix operations
+matA, matC = A.to_numpy(), C.to_numpy() 
+
+# Compute the ranks of matrices A and C using linear algebra
+rankA = np.linalg.matrix_rank(matA) 
+rankC = np.linalg.matrix_rank(matC)
+
+# Output dimensionality, number of vectors (rows), and rank of matrix A
 print("A")
-print("Dimensionality:",A.shape[1],"x",A.shape[0])
-print("Number of Vectors:",A.shape[0])
-print("Rank:",rankA)
+print("Dimensionality:", A.shape[1], "x", A.shape[0])  # shape[1] = columns, shape[0] = rows
+print("Number of Vectors:", A.shape[0])  # Number of rows (vectors)
+print("Rank:", rankA)  # Rank of matrix A
+
+# Output dimensionality, number of vectors (rows), and rank of matrix C
 print("C")
-print("Dimensionality:",C.shape[1],"x",C.shape[0])
-print("Number of Vectors:",C.shape[0])
-print("Rank:",rankC)
+print("Dimensionality:", C.shape[1], "x", C.shape[0])
+print("Number of Vectors:", C.shape[0]) 
+print("Rank:", rankC)
 
-A_pinv= np.linalg.pinv(A)
-X=A_pinv @ C
-print(X)
+# Compute the pseudo-inverse of matrix A
+A_pinv = np.linalg.pinv(A)
 
-df['Class']=df['Payment(Rs)'].apply(lambda x:'RICH' if x>200 else 'POOR')
-print(df.head)
+# Solve the equation A * X = C, using the pseudo-inverse of A
+X = A_pinv @ C
+print(X)  # Print the solution matrix X
+
+# Classify each row in the dataframe based on 'Payment(Rs)' values: 'RICH' if > 200, otherwise 'POOR'
+df['Class'] = df['Payment(Rs)'].apply(lambda x: 'RICH' if x > 200 else 'POOR')
+
+# Print the first few rows of the dataframe to check the classification
+print(df.head())
