@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np     
 
-# Define the path to the Excel file (use forward slashes to avoid issues on Windows)
+# Define the path to the Excel file
 file_path = "C:/Users/year3/Desktop/Lab Session Data.xlsx"
 
 # Read specific sheet 'Purchase data' from the Excel file
