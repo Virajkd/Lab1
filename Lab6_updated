@@ -1,0 +1,203 @@
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+from google.colab import drive
+
+# Mount Google Drive to access files
+drive.mount('/content/drive')
+
+# Load an Excel file from Google Drive
+df = pd.read_excel('/content/VSP - Java.xlsx')
+
+# Function to calculate the weighted sum for neural network (includes bias)
+def summation_unit(inputs, weights, bias):
+    inputs = np.array(inputs)
+    weights = np.array(weights)
+    # Compute the dot product of inputs and weights, then add the bias
+    weighted_sum = np.dot(inputs, weights)
+    output = weighted_sum + bias
+    return output
+
+# Various functions used in neural network operations
+import math
+
+# Summation function without bias
+def summation_unit(inputs, weights):
+    return sum(i * w for i, w in zip(inputs, weights))
+
+# Step function: Outputs 1 if input >= 0, else 0
+def step_function(x):
+    return 1 if x >= 0 else 0
+
+# Bipolar step function: Outputs 1 if input >= 0, else -1
+def bipolar_step_function(x):
+    return 1 if x >= 0 else -1
+
+# Sigmoid activation function: Smooth output between 0 and 1
+def sigmoid_function(x):
+    return 1 / (1 + math.exp(-x))
+
+# Tanh activation function: Smooth output between -1 and 1
+def tanh_function(x):
+    return math.tanh(x)
+
+# ReLU activation function: Outputs 0 if input < 0, else the input
+def relu_function(x):
+    return max(0, x)
+
+# Leaky ReLU function: Outputs a small slope for negative input, or the input for positive values
+def leaky_relu_function(x):
+    return x if x >= 0 else 0.01 * x
+
+# Comparator function to calculate the error between the predicted and actual output
+def comparator_unit(predicted, actual):
+    return actual - predicted
+
+# Training function for a perceptron model to learn AND gate logic
+def train_perceptron_and_gate(inputs, outputs, epochs=1000, lr=0.05):
+    # Initialize weights and bias
+    weights = [10, 0.2, -0.75]  
+    for epoch in range(epochs):
+        total_error = 0
+        # Loop through each input/output pair
+        for i in range(len(inputs)):
+            # Compute the weighted sum (including bias)
+            summation = summation_unit([1] + inputs[i], weights)
+            # Predict the output using the step function
+            prediction = step_function(summation)
+            # Calculate error between predicted and actual output
+            error = comparator_unit(prediction, outputs[i])
+            total_error += error ** 2
+            # Update weights based on the error
+            for j in range(len(weights)):
+                weights[j] += lr * error * ([1] + inputs[i])[j]
+        # Stop training if the total error is sufficiently low
+        if total_error <= 0.002:
+            break
+    return weights, epoch
+
+# Inputs and expected outputs for an AND gate
+inputs = [[0, 0], [0, 1], [1, 0], [1, 1]]
+outputs = [0, 0, 0, 1]
+
+# Train the perceptron to learn the AND gate
+weights, epochs = train_perceptron_and_gate(inputs, outputs)
+
+# Generalized training function for a perceptron with custom activation functions
+def train_with_activation(inputs, outputs, activation_func, epochs=1000, lr=0.05):
+    # Initialize weights
+    weights = [10, 0.2, -0.75]  
+    for epoch in range(epochs):
+        total_error = 0
+        # Loop through each input/output pair
+        for i in range(len(inputs)):
+            # Compute weighted sum and apply the activation function
+            summation = summation_unit([1] + inputs[i], weights)
+            prediction = activation_func(summation)
+            # Calculate error between prediction and actual output
+            error = comparator_unit(prediction, outputs[i])
+            total_error += error ** 2
+            # Update weights based on the error
+            for j in range(len(weights)):
+                weights[j] += lr * error * ([1] + inputs[i])[j]
+        # Stop training if the total error is sufficiently low
+        if total_error <= 0.002:
+            break
+    return weights, epoch
+
+# Example of training with the sigmoid activation function
+weights, epochs = train_with_activation(inputs, outputs, sigmoid_function)
+
+# Investigating the effect of different learning rates on the number of epochs required for training
+learning_rates = [0.1 * i for i in range(1, 11)]
+iterations = []
+
+# Train the perceptron with different learning rates
+for lr in learning_rates:
+    _, epoch = train_perceptron_and_gate(inputs, outputs, lr=lr)
+    iterations.append(epoch)
+
+# Define inputs and outputs for an XOR gate
+inputs_xor = [[0, 0], [0, 1], [1, 0], [1, 1]]
+outputs_xor = [0, 1, 1, 0]
+
+# Train perceptron for XOR gate (won't work well due to linearity limitations of perceptron)
+weights, epochs = train_perceptron_and_gate(inputs_xor, outputs_xor)
+
+# Function to train perceptron for customer data classification (e.g., rich/poor customers)
+def train_perceptron_customers(data, labels, epochs=1000, lr=0.05):
+    weights = [0.1, 0.2, 0.3, 0.4]  # Initialize weights for 3 input features + bias
+    for epoch in range(epochs):
+        total_error = 0
+        # Loop through each data point
+        for i in range(len(data)):
+            # Compute weighted sum and apply sigmoid activation
+            summation = summation_unit([1] + data[i], weights)
+            prediction = sigmoid_function(summation)
+            error = comparator_unit(prediction, labels[i])
+            total_error += error ** 2
+            # Update weights based on error
+            for j in range(len(weights)):
+                weights[j] += lr * error * ([1] + data[i])[j]
+        if total_error <= 0.002:
+            break
+    return weights, epoch
+
+# Customer data: [feature1, feature2, feature3] (example values)
+customer_data = [
+    [20, 6, 2], [16, 3, 6], [27, 6, 2], [19, 1, 2], [24, 4, 2],
+    [22, 1, 5], [15, 4, 2], [18, 4, 2], [21, 1, 4], [16, 2, 4]
+]
+
+# Labels for whether a customer is high value (1) or low value (0)
+high_value_labels = [1, 1, 1, 0, 1, 0, 1, 1, 0, 0]
+
+# Train perceptron for customer classification
+weights, epochs = train_perceptron_customers(customer_data, high_value_labels)
+
+# Pseudo-inverse solution for linear regression
+def pseudo_inverse_solution(data, labels):
+    X = np.array([[1] + d for d in data])  # Add bias term
+    Y = np.array(labels)
+    # Compute pseudo-inverse of X
+    pseudo_inv = np.linalg.pinv(X)
+    # Compute optimal weights
+    weights = np.dot(pseudo_inv, Y)
+    return weights
+
+# Calculate weights using pseudo-inverse method
+weights_pseudo = pseudo_inverse_solution(customer_data, high_value_labels)
+
+# Neural network training with backpropagation (AND gate)
+def sigmoid_derivative(x):
+    return x * (1 - x)
+
+def train_nn_and_gate(inputs, outputs, epochs=1000, lr=0.05):
+    # Initialize weights for input-to-hidden and hidden-to-output layers
+    weights_input_hidden = [0.5, -0.6, 0.2]
+    weights_hidden_output = [0.4, -0.7]
+    for epoch in range(epochs):
+        total_error = 0
+        for i in range(len(inputs)):
+            # Compute hidden layer output using sigmoid activation
+            hidden_input = summation_unit([1] + inputs[i], weights_input_hidden)
+            hidden_output = sigmoid_function(hidden_input)
+            # Compute final output
+            output_input = summation_unit([1, hidden_output], weights_hidden_output)
+            output = sigmoid_function(output_input)
+            # Calculate error
+            error = comparator_unit(output, outputs[i])
+            total_error += error ** 2
+            # Backpropagate the error and update weights
+            delta_output = error * sigmoid_derivative(output)
+            delta_hidden = delta_output * sigmoid_derivative(hidden_output) * weights_hidden_output[1]
+            weights_hidden_output[0] += lr * delta_output * 1
+            weights_hidden_output[1] += lr * delta_output * hidden_output
+            for j in range(len(weights_input_hidden)):
+                weights_input_hidden[j] += lr * delta_hidden * ([1] + inputs[i])[j]
+        if total_error <= 0.002:
+            break
+    return weights_input_hidden, weights_hidden_output, epoch
+
+# Train neural network on AND gate
+weights_input_hidden, weights_hidden_output, epochs = train_nn
